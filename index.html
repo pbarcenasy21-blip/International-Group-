@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iniciar sesión · AdminSeguro CTG</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-page">
+<main class="login-card">
+  <h1>AdminSeguro CTG</h1>
+  <p class="sub">International Group · Cartagena de Indias</p>
+  <div class="alert" id="loginError" role="alert" hidden></div>
+  <form id="loginForm" novalidate>
+    <div class="field" data-f="usuario">
+      <label for="usuario">Usuario:</label>
+      <input id="usuario" name="usuario" type="text" autocomplete="username" autofocus>
+      <small class="err" id="e_usuario" role="alert"></small>
+    </div>
+    <div class="field" data-f="password">
+      <label for="password">Contraseña:</label>
+      <div class="pass-wrap">
+        <input id="password" name="password" type="password" autocomplete="current-password">
+        <button type="button" id="togglePass" aria-label="Mostrar contraseña">Mostrar</button>
+      </div>
+      <small class="err" id="e_password" role="alert"></small>
+    </div>
+    <button class="btn block" type="submit">Ingresar</button>
+  </form>
+  <p class="login-note">Entrar con cuenta personal</p>
+  <div class="demo-box"><strong>Cuentas de demostración</strong><br>
+    Administrador: <code>admin</code> / <code>Admin123</code><br>
+    Trabajador: <code>operador</code> / <code>Operador123</code></div>
+</main>
+<script src="js/app.js"></script>
+<script>
+(function () {
+  if (App.session()) { location.replace('dashboard.html'); return; }
+  const form = document.getElementById('loginForm'), err = document.getElementById('loginError');
+  const u = document.getElementById('usuario'), p = document.getElementById('password');
+  const setErr = (el, msg) => { const f = el.closest('.field'); f.classList.toggle('invalid', !!msg); f.querySelector('.err').textContent = msg; };
+
+  // Evento: mostrar / ocultar contraseña
+  document.getElementById('togglePass').addEventListener('click', function () {
+    const show = p.type === 'password'; p.type = show ? 'text' : 'password';
+    this.textContent = show ? 'Ocultar' : 'Mostrar'; this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  });
+  // Evento: limpiar errores al escribir
+  [u, p].forEach(el => el.addEventListener('input', () => { setErr(el, ''); err.hidden = true; }));
+
+  // Evento: enviar formulario con validación
+  form.addEventListener('submit', e => {
+    e.preventDefault(); err.hidden = true;
+    const uv = u.value.trim(), pv = p.value;
+    setErr(u, uv ? '' : 'Ingresa tu usuario.'); setErr(p, pv ? '' : 'Ingresa tu contraseña.');
+    if (!uv || !pv) { (uv ? p : u).focus(); return; }
+    const r = App.login(uv, pv);
+    if (r.ok) { location.href = 'dashboard.html'; }
+    else { err.textContent = r.msg; err.hidden = false; p.value = ''; p.focus(); }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Servicios turísticos · AdminSeguro CTG</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="page-content">
+<div id="crud"></div>
+</div>
+<script src="js/app.js"></script>
+<script src="js/crud.js"></script>
+<script>
+const S = App.init('servicios', 'Servicios turísticos');
+if (S) {
+
+Crud.init({
+  entity: 'servicios', singular: 'servicio',
+  columns: [
+    { key: 'nombre', label: 'Servicio' }, { key: 'tipo', label: 'Tipo' },
+    { key: 'precio', label: 'Precio', render: r => App.fmtMoney(r.precio) },
+    { key: 'estado', label: 'Estado', badge: true }
+  ],
+  filter: { key: 'tipo', label: 'Tipo', options: ['Tour', 'Excursión', 'Transporte', 'Otro'] },
+  readOnlyNote: 'Tu rol solo permite consultar el catálogo de servicios.',
+  sort: (a, b) => a.nombre.localeCompare(b.nombre),
+  fields: [
+    { name: 'nombre', label: 'Nombre del servicio', required: true, minLength: 3, unique: true, full: true },
+    { name: 'tipo', label: 'Tipo', type: 'select', required: true, options: ['Tour', 'Excursión', 'Transporte', 'Otro'] },
+    { name: 'precio', label: 'Precio por persona (COP)', type: 'number', required: true, min: 1000, max: 5000000, integer: true },
+    { name: 'estado', label: 'Estado', type: 'select', required: true, default: 'Activo', options: ['Activo', 'Inactivo'] },
+    { name: 'descripcion', label: 'Descripción', type: 'textarea', full: true, maxLength: 250 }
+  ],
+  label: r => r.nombre,
+  canDelete: (r, d) => d.reservas.some(x => x.id_servicio === r.id) ? 'No se puede eliminar: el servicio tiene reservas. Márcalo como Inactivo.' : ''
+});
+
+}
+</script>
+</body>
+</html>
