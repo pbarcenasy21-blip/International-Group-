@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel principal · AdminSeguro CTG</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="page-content">
+
+<section class="cards" aria-label="Resumen">
+  <a class="stat" href="clientes.html"><div class="n" id="nClientes">0</div><div class="l">Clientes</div></a>
+  <a class="stat" href="reservas.html"><div class="n" id="nReservas">0</div><div class="l">Reservas activas</div></a>
+  <a class="stat" href="servicios.html"><div class="n" id="nServicios">0</div><div class="l">Servicios activos</div></a>
+  <a class="stat" href="inventario.html"><div class="n" id="nInv">0</div><div class="l">Cupos disponibles</div></a>
+</section>
+<section class="panel">
+  <h2>Próximas reservas</h2>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Cliente</th><th>Servicio</th><th>Fecha</th><th>Personas</th><th>Estado</th></tr></thead><tbody id="proximas"></tbody></table></div>
+</section>
+<section class="panel" id="adminBox" hidden>
+  <h2>Herramientas de demostración</h2>
+  <p class="hint">Solo el administrador ve esta opción. Restaura los datos de ejemplo del prototipo.</p>
+  <button class="btn ghost" id="btnReset" type="button">Restablecer datos de ejemplo</button>
+</section>
+</div>
+<script src="js/app.js"></script>
+<script>
+const S = App.init('dashboard', 'Panel principal');
+if (S) {
+const nombreDe = (arr, id, k='nombre') => (arr.find(x => x.id === id) || {})[k] || '—';
+function pintar() {
+  const d = App.db();
+  document.getElementById('nClientes').textContent = d.clientes.length;
+  document.getElementById('nReservas').textContent = d.reservas.filter(r => r.estado !== 'Cancelada').length;
+  document.getElementById('nServicios').textContent = d.servicios.filter(s => s.estado === 'Activo').length;
+  document.getElementById('nInv').textContent = d.inventario.reduce((t, i) => t + i.cantidad_disponible, 0);
+  const prox = d.reservas.filter(r => r.estado !== 'Cancelada' && r.fecha >= App.today()).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 5);
+  document.getElementById('proximas').innerHTML = prox.length ? prox.map(r =>
+    '<tr><td data-label="Cliente">' + App.esc(nombreDe(d.clientes, r.id_cliente)) + '</td><td data-label="Servicio">' + App.esc(nombreDe(d.servicios, r.id_servicio)) +
+    '</td><td data-label="Fecha">' + App.fmtDate(r.fecha) + '</td><td data-label="Personas">' + r.personas +
+    '</td><td data-label="Estado"><span class="badge b-' + App.norm(r.estado) + '">' + r.estado + '</span></td></tr>').join('')
+    : '<tr><td colspan="5" class="empty">No hay reservas próximas.</td></tr>';
+}
+pintar();
+if (S.id_rol === 1) {
+  document.getElementById('adminBox').hidden = false;
+  document.getElementById('btnReset').addEventListener('click', async () => {
+    if (await App.confirmBox('Se borrarán los cambios hechos y se cargarán los datos de ejemplo. ¿Continuar?', 'Restablecer')) {
+      App.resetDemo(); App.log('Datos de ejemplo', 'Se restablecieron los datos de demostración'); App.toast('Datos restablecidos.'); pintar();
+    }
+  });
+}
+
+}
+</script>
+</body>
+</html>
